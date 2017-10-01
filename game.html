@@ -1,0 +1,435 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 TRANSITIONAL//EN">
+<html>
+
+	<head>
+		<title>PONG-X</title>
+	<script type="text/javascript">
+/*
+crea()											Ouvre le bal
+set()											Lance le jeu, fonction recursive
+restart()										Commence la partie
+pause()											Lance le jeu lorsque la balle colle le pad
+boulbi()										Incremente la variable boulb
+vireid()										Supprime un objet en variable et en visuel
+
+*/
+function crea() {
+	i=0;
+	j=0;	
+	type = 3;  																		// nombre de vies
+	bouge = 0; 																		// active la pause avec 1
+					// pad IA
+	rapid= 5; 																		// vitesse de la balle
+	scor = 0; 																		// score
+	boulb=0;  																		// timer
+	vitesse = 100;																	// vitesse raquette IA
+	imagevite('fondd','titre2.png',100,100,500,300); 								// Ecran titre
+	texte("jouer","JOUER !",380,300,"white",1);										// Ecran titre : JOUER
+	var actif = window.setInterval("boulbi()",1000);
+	fon = new boite('fond','fond.gif',0,0,700,500,0,0); 							// fond
+	ph = new boite('padhumain','pad.png',20,(fon.yt/2)-(50/2),15,50,1,-5,'+','-'); 	// pad humain
+	pia = new boite('padIA','pad.png',670,0,15,50,1,-5,'+','-'); 								// Declenchement du timer
+	b = new boite('balleuu','cercle.png',0,0,10,10,1,03,'+','+'); 					// balle
+	perdu = 0;
+	set();
+}
+
+//coeur du jeu, decide des fonctions fondamentales à lancer
+function set(){
+	if(type!=0){
+		if(bouge==1)
+		{
+			if(rapid<19)
+			{
+				if(boulb>=10)
+				{	
+					rapid += 0.2;
+					boulb = 0;
+				}
+			}
+
+			texte("scoring","SCORE : "+b.score+" - VIES : "+type,500,100,"black",0);
+			suivre(b,pia,300,10);
+			bouger(fon,b);
+			coll(pia,b,rapid);
+			coll(ph,b,rapid);
+		}
+		else if(bouge==0) // remise en état de balle au centre de la raquette
+		{
+
+			texte("scoring","CLIQUER POUR CONTINUER",500,100,"black",0);
+			suivre(b,pia,300,10);
+			modifier(b,37,ph.yp+(ph.yt / 2)-(b.yt/2));
+
+			b.yd = 0 ; b.ys = '+';
+			b.xd = rapid ;	b.xs = '+';
+			coll(pia,b,rapid);
+			coll(ph,b,rapid);
+			
+			boulb = 0;
+		}
+		else if(bouge==2) //met en pause le jeu
+		{
+			texte("scoring","PAUSE - CLIQUER POUR CONTINUER",500,100,"black",0);
+		}
+	}
+	else if(type==0)
+	{
+		if(perdu<200)
+		{
+			texte("scoring","PERDU !",500,100,"red",0);	
+			perdu = perdu +1
+		}
+		else
+			document.location.href="game.html";	
+	}
+	else if(type ==100)
+		texte(score,"GAGNÉ !");
+		
+	window.setTimeout("set()",100/vitesse);
+}
+
+// demarre une partie
+function restart(){
+	if(type!=3)
+	{ 
+		vireid("fondd");
+		vireid("jouer");
+		vireid("scor");
+
+		bouge = 0;
+		type = 3;
+		rapid= 5;
+		b.score = 0;
+		boulb = 0;
+	}
+
+}
+
+// met une balle en jeu
+function pause(){
+	if(bouge !=1)
+	{
+		bouge = 1;
+		vireid("fondd"); 
+		vireid("jouer");
+		vireid("scor");
+	}
+	//else if(bouge==1)
+	else
+		bouge = 2;
+
+}
+
+//incremente le timer
+function boulbi(){
+	boulb += 1;
+}
+
+// supprime une image en variable et en visuel
+function vireid(id){
+
+		var div = document.getElementById('base');
+		var int = document.getElementById(id);
+		if(!int) return;
+		div.removeChild(int);  // div = ID, int = element
+}
+
+function rand(nb) { 
+	return Math.floor(Math.random() * nb)+1
+}
+
+function bouger(o,c) { 
+	
+	a = 0;
+
+	int = c.xd;
+	if(c.xp<= o.xp)
+	{ 	a=1;
+		c.xs = "+";
+		c.xd = Math.abs(c.xd);
+		if(c.ys =='+'){
+			c.yd = pos((c.yd));
+		}else{	
+			c.yd = neg((c.yd));
+		}
+		type= type-1;
+		bouge=0;
+	}
+	else if(c.xp >= o.xt-c.xt+o.xp)
+	{	a=1;
+		c.xs = "-";
+		c.xd = -1*(Math.abs(c.xd));
+		if(c.ys =='+'){
+			c.yd = pos((c.yd));
+		}else{	
+			c.yd = neg((c.yd));
+		}
+		type= type+1;
+		bouge=0;
+	}
+	
+	if(c.yp <= o.yp)
+	{	a=1;
+		c.ys = "+";
+	
+		if(c.xs =='+'){
+			c.xd = pos((c.xd));
+		}else{	
+			c.xd = neg((c.xd));
+		}
+		c.yd = Math.abs(c.yd);
+	}
+	else if(c.yp >= (o.yt-c.yt)+o.yp)
+	{	a=1;
+		c.ys = "-";
+		if(c.xs =='+'){
+			c.xd = pos((c.xd));
+		}else{	
+			c.xd = neg((c.xd));
+		}
+		c.yd = -1*(Math.abs(c.yd)); // bouge pas
+	}
+	
+	if(a>0){
+		a+=1;
+		vitesse = 800;
+		if(a>60){vitesse = 20; a=0}
+	}
+	c.xp += c.xd;
+	c.yp += c.yd;
+
+	modifier(c,c.xp,c.yp);
+
+}
+
+// Selon la trajectoire initiale de la balle,
+// la collision emènera l'objet dans une direction différente
+function coll(o,c,rapi) { 
+	var n2 = rand(rapi-2);
+	var n1 = (rapi-n2);
+
+	if((c.xp>=o.xp)&&(c.xp<=o.xp+o.xt) && (c.yp>=o.yp)&&(c.yp<=o.yp+o.yt))
+	{ //angle haut gauche
+		o.score += 1;		c.score += 1;
+		if(c.ys == '+')
+		{ 
+		c.xd = +n1; c.yd = +n2;	c.xs ='+'; c.ys = '+';
+		o.xd = -n1; o.yd = -n2;   o.xs ='-'; o.ys = '-';
+		}
+		else
+		{ 
+			c.xd = n1; c.yd = -n2;	c.xs ='+'; c.ys = '-';
+			o.xd = +n1; o.yd = +n2;   o.xs ='+'; o.ys = '+';
+		}
+
+	}
+	else if((c.xp+c.xt>=o.xp)&&(c.xp+c.xt<=o.xp+o.xt) && (c.yp>=o.yp)&&(c.yp<=o.yp+o.yt))
+	{ //angle haut droit
+		o.score += 1;		c.score += 1;
+		if(c.ys =='+')
+		{
+			c.xd = -n1; c.yd = +n2;	c.xs ='-'; c.ys = '+';
+			o.xd = +n1; o.yd = -n2;   o.xs ='+'; o.ys = '-';
+		}
+		else
+		{
+			c.xd = -n1; c.yd = -n2;	c.xs ='-'; c.ys = '-';
+			o.xd = -n1; o.yd = +n2;   o.xs ='-'; o.ys = '+';
+		}
+	}
+	else if((c.xp+c.xt>=o.xp)&&(c.xp+c.xt<=o.xp+o.xt) && (c.yp+c.yt>=o.yp)&&(c.yp+c.yt<=o.yp+o.yt))
+	{//angle bas droit
+		o.score += 1;		c.score += 1;
+		if(c.ys == '+')
+		{
+			c.xd = -n1; c.yd = +n2;	c.xs ='-'; c.ys = '+';
+			o.xd = -n1; o.yd = -n2;   o.xs ='-'; o.ys = '-';
+		}
+		else
+		{
+			c.xd = -n1; c.yd = -n2;	c.xs ='-'; c.ys = '-';
+			o.xd = +n1; o.yd = +n2;   o.xs ='+'; o.ys = '+';
+		}
+
+	}
+	else if((c.xp>=o.xp)&&(c.xp<=o.xp+o.xt) && (c.yp+c.yt>=o.yp)&&(c.yp+c.yt<=o.yp+o.yt))
+	{//angle bas gauche
+		o.score += 1;		c.score += 1;
+		if(c.ys == '+')
+		{
+			c.xd = -n1; c.yd = +n2;	c.xs ='-'; c.ys = '+';
+			o.xd = -n1; o.yd = -n2;   o.xs ='-'; o.ys = '-';
+		}
+		else
+		{
+			c.xd = -n1; c.yd = -n2;	c.xs ='-'; c.ys = '-';
+			o.xd = -n1; o.yd = n2;   o.xs ='-'; o.ys = '+';
+		}
+	}
+}
+
+
+function pos(nb){
+	return (Math.abs(nb));
+}
+
+function neg(nb){
+	return -1*(Math.abs(nb));
+}
+
+// créer une image dans le naviguateur
+function imagevite(id,img,xpos,ypos,xtaille,ytaille)
+{
+
+	vireid(id);
+	var o = document.getElementById('base');
+
+	var b = document.createElement('img');
+	b.setAttribute('id',id);
+	b.setAttribute('src',img);
+	b.style.position = 'absolute';
+
+	o.appendChild(b);
+
+	var u = document.getElementById(id);
+	u.setAttribute('height',ytaille);
+	u.setAttribute('width',xtaille);
+	u.style.top = ypos; 
+	u.style.left = xpos;
+
+} 
+
+function boite(id,img,xpos,ypos,xtaille,ytaille,xdirection,ydirection,xsigne,ysigne)
+{
+	this.xp = xpos;
+	this.yp = ypos;
+	this.xt = xtaille;
+	this.yt = ytaille;
+	this.xd = xdirection;
+	this.yd = ydirection;
+	this.xs = xsigne;
+	this.ys = ysigne;
+	this.id  = id;
+	this.score = 0;
+	var o = document.getElementById('massue');
+
+	var b = document.createElement('img');
+	b.setAttribute('id',id);
+	b.setAttribute('src',img);
+	b.style.position = 'absolute';
+
+	o.appendChild(b);
+
+	this.u = document.getElementById(id);
+	this.u.setAttribute('height',ytaille);
+	this.u.setAttribute('width',xtaille);
+	modifier(this,xpos,ypos);
+}
+
+//position de l'objet
+function modifier(u,x,y) 
+{
+	var t = document.getElementById(u.id);
+	t.style.top = y; u.yp = y;
+	t.style.left = x; u.xp = x;
+}
+
+//modif de l'url de l'image
+function image(u,img) 
+{
+	var t = document.getElementById(u.id);
+	t.src = img;
+}
+
+//recuperation de la coordonée en Y du pad humain
+function pad(a,b)
+ { 
+ 	if(bouge!=2) // si on est en pause, la raquette ne bougera pas
+ 	{
+		Yee = window.event.y; 
+
+		phu = document.getElementById(b.id);
+
+		//on n'opère pas de déplacement si il est en dehors des limites du fond (else)
+		if(Yee > (a.yt - b.yt))
+		{
+			b.yp = a.yt - b.yt - 2;
+			phu.style.top  =  b.yp;
+		}
+		else
+		{
+			b.yp = Yee - (b.yt / 2); 
+			phu.style.top  = b.yp;
+		}
+	}
+}
+
+
+// suit un objet en Y et :
+// a est l'objet mouvant
+// b est l'objet suiveur
+// utilisé pour la raquette "machine"
+function suivre(a,b,vitesse,ref){
+	if(a.yp-2> b.yp+Math.ceil(b.yt / 2)-(a.yt/2))
+	{
+
+		i = i+1;
+
+		if(i < ref)
+		{
+			b.yp += vitesse/200; 	
+		}
+	 	if(i>=ref){b.yp += vitesse/100;} 
+	}
+	else if(a.yp+2 <= b.yp+Math.ceil(b.yt / 2)-(a.yt/2))
+	{ 
+		j = j+1;
+		if(j<ref)
+		{
+			b.yp -= vitesse/200; 
+		}
+		if(j>=ref){b.yp -= vitesse/100;}
+	}else {i = 0; j = 0;}
+
+	var phu = document.getElementById(b.id);
+	phu.style.top  =  b.yp;
+
+}
+
+// ecrit du texte sur la page
+function texte(id,mots,x,y,couleur,lien)
+{
+	m = document.getElementById('base');
+
+	cont = document.getElementById(id);
+	int = document.createTextNode(mots);
+	if(cont){	m.removeChild(cont); }
+
+	txt = document.createElement('div');
+	txt.setAttribute('id',id);
+	if(lien==1)	
+	{
+		txt.setAttribute('href',"#");
+	}
+	
+	txt.style.position = 'absolute';
+	txt.style.top = x;
+	txt.style.left = y;
+	txt.style.color = couleur;
+	int = document.createTextNode(mots);
+
+	txt.appendChild(int);
+	m.appendChild(txt);
+}
+
+window.onload = function() { crea(); }
+window.onclick = function() { pause();};
+	</script>
+	</head>
+	<body  OnMousemove="pad(fon,ph)" >
+<div id='base' />
+<div id='cont' />
+<div id='massue' />
+	</body>
+</html>
